@@ -1,1 +1,0 @@
-\(\("lexic* resourc*" OR dictionari* OR lexicon*\) AND \("polit* discours*" OR "polit* scienc*" OR "polit* speech*" OR "polit* text*" OR "public* opinion*" OR government**\) AND \("content* analysi*" OR "corpus* analysi*" OR "critic* discours* analysi*" OR "cultur* context*" OR "emot* analysi*" OR "english* languag*" OR text*\)\)

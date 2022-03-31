@@ -1,8 +1,0 @@
-This is going to write .txt files to your computer containing the search strings. Are you sure you want to write the files? 
-
-1: yes
-2: no
-
-Geben Sie Menüpunkt ein oder 0 zum Abbruch
-Geben Sie Menüpunkt ein oder 0 zum Abbruch
-Geben Sie Menüpunkt ein oder 0 zum Abbruch
