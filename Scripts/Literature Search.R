@@ -7,9 +7,6 @@ library(readr)
 library(PRISMAstatement)
 library(bibliometrix)
 
-
-
-
 #Resources
 #https://luketudge.github.io/litsearchr-tutorial/litsearchr_tutorial.html#Network_analysis
 
@@ -80,7 +77,7 @@ ggraph(reducedgraph, layout="stress") +
   geom_node_text(aes(label=name), hjust="outward", check_overlap=TRUE) +
   guides(edge_alpha=FALSE) 
 
-ggsave("./Figures/network_graph.png")
+ggsave("./plots/network_graph.png")
 
 strengths <- strength(reducedgraph)
 
@@ -96,7 +93,7 @@ ggplot(term_strengths, aes(x=rank, y=strength, label=term)) +
   geom_point() +
   geom_text(data=filter(term_strengths, rank>5), hjust="right", nudge_y=20, check_overlap=TRUE)
 
-ggsave("./figure/strengts_cutoffs.png")
+ggsave("./plots/strengts_cutoffs.png")
 
 selected_terms_without_keywords <- get_keywords(reducedgraph)
 
