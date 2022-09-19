@@ -1,1 +1,0 @@
-(Part* OR politic* OR govern*) AND (Dictiona* OR Lexic*) AND (text*)

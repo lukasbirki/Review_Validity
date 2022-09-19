@@ -1,0 +1,1 @@
+\(\(elect* OR govern* OR parti* OR polici* OR sentiment* OR "social* media*" OR polit*\) AND \("autom* text* analysi*" OR "content* analysi*" OR discours* OR languag* OR "machin* learn*" OR text* OR word* OR "comput* communic* scienc*" OR Corpus* OR lexicon*\)\)
