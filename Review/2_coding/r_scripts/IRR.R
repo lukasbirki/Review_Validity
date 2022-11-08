@@ -21,6 +21,25 @@ df_temp %>%
 
 irr::kappa2(irr_1[,2:3])
 
+
+install.packages("clipr")
+library("clipr")
+my_data <- read_clip_tbl()
+tibble::as_tibble(my_data) -> xx
+
+
+ratertab <- xtabs (~ my_data$a + my_data$b)
+CohenKappa(ratertab, conf.level = 0.95)
+
+
+install.packages("irrCAC")
+library(irrCAC)
+irrCAC::
+agree.coeff3.raw.r
+
+irr::kappa2(xx[,1:2])
+
+
 # 2. Getting IRR for eligibility ----
 
 df_temp %>% 
