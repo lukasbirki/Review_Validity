@@ -36,7 +36,8 @@ df_coder_2 <- t1 %>% filter(coder == "david.gruening@gesis.org")
 full_join(df_coder_1, 
           df_coder_2, 
           by = c("id","question"),
-          suffix = c("_c1", "_c2")) -> t2
+          suffix = c("_c1", "_c2")) %>% 
+  select(id, question, values_c1, values_c2) -> t2
 
 xlsx::write.xlsx(t2, "Review/2_coding/data/IRR2_coding_sheet.xlsx")
 
