@@ -1,4 +1,5 @@
 library(tidyverse)
+library(gridExtra)
 
 df <- readxl::read_xlsx("Review/3_plots/data/results_corrected.xlsx") %>% 
   filter(`E-Mail-Adresse` == "lukas.birkenmaier@outlook.de") %>% 
@@ -38,9 +39,9 @@ df_plot %>%
   coord_flip() +
   labs(title = "Data Sources", x = "Data", y = "n") +
   scale_colour_Publication()+
-  theme_Publication()
+  theme_Publication() -> barchart_source
 
-ggsave("source.png")
+ggsave(plot =barchart_source ,filename = "Review/3_plots/output/barchart_source.png",width = 13, height = 6)
 
 ## Language
 
@@ -53,10 +54,10 @@ df_plot %>%
   ggplot(aes(x=reorder(language_combined, table(language_combined)[language_combined]),fill = factor(language_combined))) +
   geom_bar() +
   coord_flip() +
-  labs(title = "Languages Analzed", x = "Language", y = "n", fill = "language") +
-  theme_Publication()
+  labs(title = "Languages Analzed", x = "OOLanguage", y = "n", fill = "Language") +
+  theme_Publication() ->barchart_language
 
-ggsave("language.png")
+ggsave(plot =barchart_language,"Review/3_plots/output/barchart_language.png", width = 13, height = 6)
 
 ## Method Type
 df_plot %>% 
@@ -70,9 +71,14 @@ df_plot %>%
   geom_bar() +
   coord_flip() +
   labs(title = "Method Type", x = "Type", y = "n", fill = "Method") +
-  theme_Publication()+theme(axis.title.y = element_blank())
+  theme_Publication()+theme(axis.title.y = element_blank()) -> barchart_method
 
-ggsave("Tile_plot.png")
+ggsave(plot = barchart_method,"Review/3_plots/output/barchart_method.png", width = 13, height = 6)
+
+#Summary Plot
+
+grid.arrange(barchart_source,barchart_method,nrow=1) -> arranged
+ggsave(plot = arranged,"Review/3_plots/output/arranged_method_language.png", width = 13, height = 6)
 
 #Count of validation steps
 
@@ -82,6 +88,8 @@ df_plot %>%
   geom_bar()+
   labs(title = "Number of Validation Steps", x = "Validation Steps", y = "n", fill = "Number of Validation Steps") +
   theme_Publication() + theme(axis.title.y = element_blank())
+
+ggsave("Review/3_plots/output/barchart_validation_count.png", width = 13, height = 6)
 
 #Method and Validation
 
@@ -94,8 +102,17 @@ df_plot %>%
     T ~ NA_character_)) %>% 
   count(method_short,v3) %>% 
   drop_na(method_short) %>% 
-ggplot(aes(method_short,v3, fill= n)) + 
+ ggplot(aes(method_short,v3, fill= n)) + 
   geom_tile() +  labs(title = "Heatmap of CTAM Method and Validation Type", x = "Method", y = "Validation Type", fill = "n") +
-  theme_Publication() + scale_fill_gradient2()
+  theme_Publication() + scale_fill_gradient2() +
+  theme(legend.direction = "vertical",legend.position = "right",legend.key.size= unit(0.5, "cm"))
 
+ggsave("Review/3_plots/output/heatmap_methodxtype.png", width = 13, height = 6)
+
+#
+
+df_plot %>% 
+  group_by(method_type) %>% 
+  summarize(n = n(),
+            amount_method )
 
