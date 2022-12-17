@@ -3,23 +3,23 @@ library(irr)
 
 # 1. Getting IRR for eligibility ----
 
-df_temp <- readxl::read_xlsx("Review/2_coding/data/export_forms.xlsx") %>% 
+
+df_temp <- readr::read_csv2("Review/2_coding/data/export_forms.csv") %>% 
   slice(-35) %>% 
   dplyr::rename(coder = `E-Mail-Adresse`,
                 eligibil = names(.)[4]) %>% 
   mutate(id = paste(stringr::word(.$`This is the title of the Study`,1),
                     stringr::word(.$`These are the Authors`,1),sep = "_")) %>% 
-drop_na(coder) 
+  drop_na(coder) 
 
 df_temp %>% 
   select(coder, id, eligibil) %>% 
   pivot_wider(names_from = coder,
-                             values_from = c(eligibil)) %>% 
+              values_from = c(eligibil)) %>% 
   drop_na() -> irr_1 #Only keep rows where both coders coded something
 
-#http://www.cookbook-r.com/Statistical_analysis/Inter-rater_reliability/
 
-irr::kappa2(irr_1[,2:3])
+#http://www.cookbook-r.com/Statistical_analysis/Inter-rater_reliability/
 
 # 2. Getting IRR for eligibility ----
 
@@ -37,64 +37,26 @@ full_join(df_coder_1,
           df_coder_2, 
           by = c("id","question"),
           suffix = c("_c1", "_c2")) %>% 
-  select(id, question, values_c1, values_c2) -> t2
+  select(id, question, values_c1, values_c2) -> irr_template_2
 
-xlsx::write.xlsx(t2, "Review/2_coding/data/IRR2_coding_sheet.xlsx")
-
-
-
-  
-  
+xlsx::write.xlsx(irr_template_1, "Review/2_coding/data/IRR2_coding_sheet.xlsx")
 
 
-library(tidyverse)
-library(irr)
+# 3. Getting IRR for broad Validation categories ----
 
-# 1. Getting IRR for eligibility ----
-
-df_temp <- readxl::read_xlsx("Review/2_coding/data/export_forms.xlsx") %>% 
+df_temp <- readxl::read_xlsx("Review/3_plots/data/Results_final.xlsx") %>% 
   slice(-35) %>% 
   dplyr::rename(coder = `E-Mail-Adresse`,
                 eligibil = names(.)[4]) %>% 
   mutate(id = paste(stringr::word(.$`This is the title of the Study`,1),
-                    stringr::word(.$`These are the Authors`,1),sep = "_")) %>% 
-drop_na(coder) 
+                    stringr::word(.$`These are the Authors`,1),sep = "_")) 
+
+
 
 df_temp %>% 
-  select(coder, id, eligibil) %>% 
-  pivot_wider(names_from = coder,
-                             values_from = c(eligibil)) %>% 
-  drop_na() -> irr_1 #Only keep rows where both coders coded something
-
-#http://www.cookbook-r.com/Statistical_analysis/Inter-rater_reliability/
-
-irr::kappa2(irr_1[,2:3])
-
-
-install.packages("clipr")
-library("clipr")
-my_data <- read_clip_tbl()
-tibble::as_tibble(my_data) -> xx
-
-
-ratertab <- xtabs (~ my_data$a + my_data$b)
-CohenKappa(ratertab, conf.level = 0.95)
-
-
-install.packages("irrCAC")
-library(irrCAC)
-irrCAC::
-agree.coeff3.raw.r
-
-irr::kappa2(xx[,1:2])
-
-
-# 2. Getting IRR for eligibility ----
-
-df_temp %>% 
-  filter(!is.na(v1a)) %>% 
-  select(id, coder, v1a:v6d) %>% 
-  pivot_longer(cols = v1a:v6d,
+  filter(!is.na(a_v1)) %>% 
+  select(id, coder, a_v1:f_v1) %>% 
+  pivot_longer(cols = a_v1:f_v1,
                names_to = "question",
                values_to = "values")->  t1
 
@@ -104,7 +66,8 @@ df_coder_2 <- t1 %>% filter(coder == "david.gruening@gesis.org")
 full_join(df_coder_1, 
           df_coder_2, 
           by = c("id","question"),
-          suffix = c("_c1", "_c2")) -> t2
+          suffix = c("_c1", "_c2")) %>% 
+  drop_na() %>% 
+  select(id, question, values_c1, values_c2) -> irr_template_2
 
-xlsx::write.xlsx(t2, "Review/2_coding/data/IRR2_coding_sheet.xlsx")
-
+xlsx::write.xlsx(irr_template_2, "Review/2_coding/data/IRR_X__coding_sheet.xlsx")
