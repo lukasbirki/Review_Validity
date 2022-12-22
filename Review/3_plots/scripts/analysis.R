@@ -269,11 +269,46 @@ ggpubr::ggarrange(n_validation_bar,
 
 ggsave(plot = n_validation_overview ,filename = "Review/3_plots/n_validation_overvietw.png",width = 9, height = 8,dpi = 300)
 
+## Type of Validation Evidence ----
 
+df_qual <- readxl::read_xlsx("Review/3_plots/data/Qualitative_Evaluation_Validation_Steps.xlsx") %>% 
+  select(method_short	,category_general,category_specific,	validity_type_paper,Text_Long,Description_informal
+)
 
-## Type of Validation Evidence and Method Type ----
+df_qual %>% 
+  count(category_general) %>% 
+  ggplot(aes(x=factor(category_general, 
+                      levels = c("Unsure", 
+                                 "Robustness Excercises",
+                                 "Output Validation: Criterion data / Predictive validation",
+                                 "Output Validation: Human Annotated Scores",
+                                 "Output Validation: Scores from other CATM",
+                                 "Content Validation"
+                                )), y = n, fill = category_general)) +
+  geom_bar(stat = "identity")+
+  coord_flip()
+
+df_qual %>% 
+  filter(category_general == "Content Validation") %>% 
+  count(category_specific) %>% arrange(-n) -> n_gesamt 
+
+df_qual %>% 
+  filter(category_general == "Content Validation") %>% 
+  count(method_short,category_specific) %>% 
+  left_join(., n_gesamt, by = "category_specific") %>% 
+  ggplot(aes(x = reorder(category_specific,n.y), y = n.x, fill = method_short))+
+  geom_bar(position="stack", stat="identity")+
+  coord_flip()+
+theme_Publication() + scale_fill_Publication() + 
+  theme(axis.title.y = element_blank(), 
+        legend.position = "none",
+        axis.title.x = element_blank())
+  
+
+### Type of Validation Evidence and Method Type ----
 
 ### Type of Validation (simple)----
+
 
 
 df_plot %>% 
