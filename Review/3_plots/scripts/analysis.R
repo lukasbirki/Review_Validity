@@ -52,13 +52,17 @@ df_time %>%
     (topic2 %in% df_categories$`Social Sciences`) ~ "Social Sciences",
     (topic2 %in% df_categories$Technology) ~ "Technology",
     T ~ "No")) %>% 
+  filter(`Publication Year`<= 2021) %>% 
   count(cat,`Publication Year`) %>% 
   ggplot() +
   geom_area(aes(x = `Publication Year`, y = n, fill = cat), alpha = 0.8)+
-  xlim(2005,2022)+
+  xlim(2005,2021)+
   labs(y = "Count") +
   theme_Publication() +
-  scale_fill_Publication()
+  scale_fill_Publication() -> plot_time
+
+ggsave(plot =plot_time ,filename = "Review/3_plots/output/overview_time.png",width = 12, height = 9,dpi = 300)
+
 
 ## Overview ----
 
@@ -92,8 +96,8 @@ rbind(df1 %>% filter(n > 1),df2) %>%
   geom_bar(stat = "identity") +
   coord_flip() +
   scale_x_discrete(labels = label_wrap(15))+
-  labs(title = "a) Data Origin", y = "n") +
-  scale_fill_Publication(name = "Type")+
+  labs(title = "a) Text Source", y = "n") +
+  scale_fill_manual(name = "Type",values = c("#ef3b2c","#662506","#a6cee3","#fb9a99"))+
   theme_Publication() +
   theme(legend.position = "top",legend.direction="horizontal", legend.title = element_text(size = 13,face = "bold"),
         axis.title.y = element_blank(),
@@ -110,7 +114,7 @@ df_temp%>%
   count(language_combined) %>% left_join(df_temp, ., by = "language_combined") %>% 
   mutate(language_combined = case_when(
     (n > 2) ~ language_combined,
-    (n <=2) ~ "Others")) %>% 
+    (n <=2) ~ "Others")) |>  nrow()
   ggplot(aes(x=reorder(language_combined, table(language_combined)[language_combined]),fill = factor(language_combined))) +
   geom_bar() +
   coord_flip() +
@@ -143,7 +147,7 @@ df %>%
         axis.title.x = element_blank())  -> tile_type_topic
 
 
-ggpubr::ggarrange(ggpubr::ggarrange(barchart_source,barchart_language,nrow=2),tile_type_topic,nrow = 1) -> souce_overview
+ggpubr::ggarrange(ggpubr::ggarrange(barchart_source,barchart_language,nrow=2,align = "v",heights = c(1.2,1)),tile_type_topic,nrow = 1) -> souce_overview
 
 
 ggsave(plot =souce_overview ,filename = "Review/3_plots/output/overview_descriptive.png",width = 12, height = 9,dpi = 300)
@@ -269,7 +273,7 @@ ggpubr::ggarrange(n_validation_bar,
 
 ggsave(plot = n_validation_overview ,filename = "Review/3_plots/n_validation_overvietw.png",width = 9, height = 8,dpi = 300)
 
-## Type of Validation Evidence ----
+## Validation Type (general) ----
 
 df_qual <- readxl::read_xlsx("Review/3_plots/data/Qualitative_Evaluation_Validation_Steps.xlsx") %>% 
   select(method_short	,category_general,category_specific,	validity_type_paper,Text_Long,Description_informal
@@ -277,33 +281,104 @@ df_qual <- readxl::read_xlsx("Review/3_plots/data/Qualitative_Evaluation_Validat
 
 df_qual %>% 
   count(category_general) %>% 
-  ggplot(aes(x=factor(category_general, 
-                      levels = c("Unsure", 
-                                 "Robustness Excercises",
-                                 "Output Validation: Criterion data / Predictive validation",
-                                 "Output Validation: Human Annotated Scores",
-                                 "Output Validation: Scores from other CATM",
-                                 "Content Validation"
-                                )), y = n, fill = category_general)) +
-  geom_bar(stat = "identity")+
-  coord_flip()
-
-df_qual %>% 
-  filter(category_general == "Content Validation") %>% 
-  count(category_specific) %>% arrange(-n) -> n_gesamt 
-
-df_qual %>% 
-  filter(category_general == "Content Validation") %>% 
-  count(method_short,category_specific) %>% 
-  left_join(., n_gesamt, by = "category_specific") %>% 
-  ggplot(aes(x = reorder(category_specific,n.y), y = n.x, fill = method_short))+
+  drop_na(category_general) |> group_by(category_general) |> mutate(count_total = sum(n)) |> 
+  ggplot(aes(x=reorder(category_general,count_total), y = n, fill = method_short)) +
   geom_bar(position="stack", stat="identity")+
   coord_flip()+
-theme_Publication() + scale_fill_Publication() + 
-  theme(axis.title.y = element_blank(), 
-        legend.position = "none",
-        axis.title.x = element_blank())
+  theme_Publication() + scale_fill_Publication(name = "Method Type") + 
+  theme(legend.direction = "vertical",legend.position = "right",
+        legend.key.size= unit(0.8, "cm"),
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank()) -> plot_validation_general
+
+ggsave(plot = plot_validation_general ,filename = "Review/3_plots/output/plot_validation_general.png",width = 12, height = 7,dpi = 300)
+
+
+## Validation Type (specific) ----
+unique(df_qual$category_general) -> types
+
+df_qual |> 
+  group_by(category_specific,method_short) |> 
+  mutate(n_specific = n()) |> 
+  ungroup() |> 
+  distinct(method_short, category_general, category_specific, n_specific) -> df_validation_specific 
   
+df_validation_specific |> 
+  filter(category_general == types[1]) |> 
+ggplot(aes(x=reorder(category_specific,n_specific), y = n_specific, fill = method_short)) +
+    geom_bar(position="stack", stat="identity")+
+    coord_flip()+
+  ylim(0,15)+
+  labs(title = "Content Validation")+
+    theme_Publication() + scale_fill_Publication(name = "Method Type") + 
+    theme(legend.direction = "horizontal",legend.position = "right",
+          legend.key.size= unit(0.8, "cm"),
+          axis.title.y = element_blank(), 
+          axis.title.x = element_blank())  -> p_content
+
+df_validation_specific |> 
+  filter(category_general == types[2]) |> 
+  ggplot(aes(x=reorder(category_specific,n_specific), y = n_specific, fill = method_short)) +
+  geom_bar(position="stack", stat="identity")+
+  coord_flip()+
+  ylim(0,15)+
+  labs(title = "Output Validation: Criterion Data")+
+  theme_Publication() + scale_fill_Publication(name = "Method Type") + 
+  theme(legend.direction = "horizontal",legend.position = "right",
+        legend.key.size= unit(0.8, "cm"),
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank()) -> p_criterion
+
+df_validation_specific |> 
+  filter(category_general == types[4]) |> 
+  ggplot(aes(x=reorder(category_specific,n_specific), y = n_specific, fill = method_short)) +
+  geom_bar(position="stack", stat="identity")+
+  coord_flip()+
+  ylim(0,15)+
+  labs(title = "Robustness Analysis")+
+  theme_Publication() + scale_fill_Publication(name = "Method Type") + 
+  theme(legend.direction = "horizontal",legend.position = "right",
+        legend.key.size= unit(0.8, "cm"),
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank()) -> p_Robust
+
+df_validation_specific |> 
+  filter(category_general == types[5]) |> 
+  ggplot(aes(x=reorder(category_specific,n_specific), y = n_specific, fill = method_short)) +
+  geom_bar(position="stack", stat="identity")+
+  coord_flip()+
+  ylim(0,50)+
+  labs(title = "Output Validation: Human Labels")+
+  theme_Publication() + scale_fill_Publication(name = "Method Type") + 
+  theme(legend.direction = "horizontal",legend.position = "right",
+        legend.key.size= unit(0.8, "cm"),
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank()) -> p_human
+
+df_validation_specific |> 
+  filter(category_general == types[6]) |> 
+  ggplot(aes(x=reorder(category_specific,n_specific), y = n_specific, fill = method_short)) +
+  geom_bar(position="stack", stat="identity")+
+  coord_flip()+
+  ylim(0,15)+
+  labs(title = "Output Validation: CTAM Scores")+
+  theme_Publication() + scale_fill_Publication(name = "Method Type") + 
+  theme(legend.direction = "horizontal",legend.position = "right",
+        legend.key.size= unit(0.8, "cm"),
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank()) -> p_CTAM
+
+
+ggpubr::ggarrange(p_human,p_content, p_criterion, p_CTAM, p_Robust,nrow=5,
+                  common.legend = TRUE, legend="top",
+                  heights = c(1.8,
+                              4,
+                              2,
+                              2,
+                              3),align = "v") -> plot_validation
+
+ggsave(plot = plot_validation ,filename = "Review/3_plots/output/plot_validation.png",width = 12, height = 12,dpi = 300)
+
 
 ### Type of Validation Evidence and Method Type ----
 
