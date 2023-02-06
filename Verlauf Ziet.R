@@ -1,5 +1,5 @@
-df <- readxl::read_xls("C:/Users/birkenls/OneDrive - GESIS – Leibniz-Institut für Sozialwissenschaften e.V/Desktop/savedrecs.xls")
-df_categories <- readxl::read_xlsx("C:/Users/birkenls/OneDrive - GESIS – Leibniz-Institut für Sozialwissenschaften e.V/Desktop/Book1.xlsx")
+df <- readxl::read_xls("Review/1_literature_search/data/savedrecs.xls")
+df_categories <- readxl::read_xlsx("Review/1_literature_search/data/search_results_CTAM_publications.xlsx")
 
 df %>% 
   count(`Publication Year`, topic) %>% 

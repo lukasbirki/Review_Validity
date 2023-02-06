@@ -322,10 +322,12 @@ df_qual |>
 #Old Plot
 
 df_qual |> 
-  count(method_short,Phase,category_specific) |> 
   drop_na() |> 
+  count(method_short,Phase,category_specific) |> 
+  mutate(Phase = fct_relevel(Phase, "Structural"),
+         category_specific = fct_reorder(category_specific, n)) %>% 
   ggplot(df_qual, mapping = aes(x = category_specific, y = n, fill = method_short)) + 
-  geom_bar(stat = 'identity', position = 'stack') + 
+  geom_col(position = 'stack') + 
   facet_grid(rows = vars(factor(Phase,levels = c("Structural",
                                                  "External","Robustness Checks"))), scales = "free_y",  space = "free_y") +
   coord_flip() +
@@ -341,10 +343,10 @@ df_qual |>
     axis.title.x = element_text(margin = margin(t = 0.5, b = 0.5, unit = "cm")),
     axis.title.y = element_blank(),
     axis.text = element_text(size = 10),
-    legend.position = "none",
+    legend.position = "bottom",
     panel.grid.major.y = element_blank()) -> plot_detailed
 
-ggsave(plot = plot_detailed ,filename = "Review/3_plots/output/plot_validation_update.png",width = 10, height = 11,dpi = 500)
+ggsave(plot = plot_detailed ,filename = "Review/3_plots/output/plot_validation_update.png",width = 10, height = 8,dpi = 500)
 
 
 
