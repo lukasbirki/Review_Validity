@@ -191,9 +191,9 @@ df %>%
   count(link)%>%
   ggplot(aes(x=link,y = n, fill = link)) +
   geom_bar(stat = "identity")+
-  labs(title = "Replication Materials available?",) +
+  labs(title = "Replication Materials available?",y = "Count of Publications") +
   theme_Publication() + scale_fill_Publication() + 
-  theme(axis.title.y = element_blank(), legend.position = "none",axis.title.x = element_blank())
+  theme(legend.position = "none",axis.title.x = element_blank())
 
 ggsave("Review/3_plots/output/replication.png", width = 8, height = 8)
 
@@ -235,11 +235,9 @@ df_n_validation %>%
   distinct(id,n_validation_adjusted) %>% 
   ggplot(aes(x=as.character(round(n_validation_adjusted)),fill = factor(round(n_validation_adjusted)))) +
   geom_bar()+
-  labs(title = "a) Distribution of Validation Steps", y = "n", fill = "Number of Validation Steps") +
+  labs(title = "a) Distribution of Validation Steps per Publication", y = "Count of Publications\n", x = "\nNumber of Validation Steps") +
   theme_Publication() + scale_fill_Publication() + 
-  theme(axis.title.y = element_blank(), 
-        legend.position = "none",
-        axis.title.x = element_blank()) -> n_validation_bar
+  theme(legend.position = "none") -> n_validation_bar
 
 ### Number of Validation (method )----
 
@@ -255,14 +253,12 @@ df_n_validation %>%
   ggplot(aes(method_short,as.character(n_validation), fill= n)) + 
   geom_tile() +  
   geom_text(aes(label = n),size = 4,fontface  = "bold",color = "white")+
-  labs(title = "b) Distribution of Validation Steps per Method Type",fill = "Count") +
+  labs(title = "b) Distribution of Validation Steps per Method Type", fill = "Count", y = "Number of Validation Steps\n", x = "\nMethod Type") +
   theme_Publication() + scale_fill_gradient2(breaks = c(seq(1,9,1))) +
   scale_x_discrete(labels = label_wrap(15))+
   scale_y_discrete(labels = label_wrap(20))+
   theme(legend.direction = "vertical",legend.position = "right",
-        legend.key.size= unit(0.8, "cm"),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank()) -> n_validation_method_heatmap
+        legend.key.size= unit(0.8, "cm")) -> n_validation_method_heatmap
 
 
 ggpubr::ggarrange(n_validation_bar,
@@ -271,31 +267,87 @@ ggpubr::ggarrange(n_validation_bar,
                   nrow=2) -> n_validation_overview
 
 
-ggsave(plot = n_validation_overview ,filename = "Review/3_plots/n_validation_overvietw.png",width = 9, height = 8,dpi = 300)
+ggsave(plot = n_validation_overview ,filename = "Review/3_plots/output/n_validation_overview.png",width = 10, height = 8,dpi = 300)
 
 ## Validation Type (general) ----
 
 df_qual <- readxl::read_xlsx("Review/3_plots/data/Qualitative_Evaluation_Validation_Steps.xlsx") %>% 
-  select(method_short	,category_general,category_specific,	validity_type_paper,Text_Long,Description_informal
-)
+  select(method_short	, Phase,category_evidence,category_specific )
 
 df_qual %>% 
-  count(category_general, method_short) %>% 
-  drop_na(category_general) |> group_by(category_general) |> mutate(count_total = sum(n)) |> 
-  ggplot(aes(x=reorder(category_general,count_total), y = n, fill = method_short)) +
+  count(Phase, method_short) %>% 
+  drop_na(Phase) |> group_by(Phase) |> mutate(count_total = sum(n)) |> 
+  ggplot(aes(x=factor(Phase, levels = c("Robustness Checks",
+                                        "External",
+                                        "Structural")), y = n, fill = method_short)) +
   geom_bar(position="stack", stat="identity")+
   coord_flip()+
+  labs(y = "\nNumber of Validation Steps")+
   theme_Publication() + scale_fill_Publication(name = "Method Type") + 
   theme(legend.direction = "vertical",legend.position = "right",
         legend.key.size= unit(0.8, "cm"),
-        axis.title.y = element_blank(), 
-        axis.title.x = element_blank()) -> plot_validation_general
+        axis.title.y = element_blank()) -> plot_validation_general
 
-ggsave(plot = plot_validation_general ,filename = "Review/3_plots/output/plot_validation_general.png",width = 12, height = 7,dpi = 300)
+ggsave(plot = plot_validation_general ,filename = "Review/3_plots/output/plot_validation_general.png",width = 10, height = 4,dpi = 300)
 
 
 ## Validation Type (specific) ----
-unique(df_qual$category_general) -> types
+
+df_qual |> 
+  filter(Phase == "Structural") |> 
+  count(method_short,category_evidence,category_specific) |> 
+  drop_na() |> 
+  ggplot(df_qual, mapping = aes(x = category_specific, y = n, fill = method_short)) + 
+  geom_bar(stat = 'identity', position = 'stack') + 
+  facet_grid(rows = vars(category_evidence), scales = "free_y",  space = "free_y") +
+  coord_flip() +
+  scale_fill_Publication(name = "Method Type")+
+  theme_Publication()+
+  theme(
+    plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm"),
+    plot.title = element_text(size = 15, face = "bold"),
+    strip.text.x = element_blank(),
+    strip.text.y = element_text(angle = 270, face = "bold"),
+    strip.placement = "outside",
+    axis.title.x = element_text(margin = margin(t = 0.5, b = 0.5, unit = "cm")),
+    axis.title.y = element_blank(),
+    axis.text = element_text(size = 10),
+    legend.position = "none",
+    panel.grid.major.y = element_blank())
+ # theme(    strip.placement = "outside",
+  #          strip.text.y = element_text(angle = 270, face = "bold"),
+   #         panel.grid.major.y = element_blank())+
+  
+
+#Old Plot
+
+df_qual |> 
+  count(method_short,Phase,category_specific) |> 
+  drop_na() |> 
+  ggplot(df_qual, mapping = aes(x = category_specific, y = n, fill = method_short)) + 
+  geom_bar(stat = 'identity', position = 'stack') + 
+  facet_grid(rows = vars(factor(Phase,levels = c("Structural",
+                                                 "External","Robustness Checks"))), scales = "free_y",  space = "free_y") +
+  coord_flip() +
+  scale_fill_Publication(name = "Method Type")+
+  labs(y = "Count of Validation Steps")+
+  theme_Publication()+
+  theme(
+    plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm"),
+    plot.title = element_text(size = 15, face = "bold"),
+    strip.text.x = element_blank(),
+    strip.text.y = element_text(angle = 270, face = "bold"),
+    strip.placement = "outside",
+    axis.title.x = element_text(margin = margin(t = 0.5, b = 0.5, unit = "cm")),
+    axis.title.y = element_blank(),
+    axis.text = element_text(size = 10),
+    legend.position = "none",
+    panel.grid.major.y = element_blank()) -> plot_detailed
+
+ggsave(plot = plot_detailed ,filename = "Review/3_plots/output/plot_validation_update.png",width = 10, height = 11,dpi = 500)
+
+
+
 
 df_qual |> 
   group_by(category_specific,method_short) |> 
